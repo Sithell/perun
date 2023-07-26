@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/sithell/perun/provider/internal/docker"
 	"github.com/sithell/perun/provider/pb"
 	"google.golang.org/grpc"
 	"log"
@@ -24,7 +25,12 @@ type server struct {
 }
 
 func (s *server) RunContainer(_ context.Context, runContainerParams *pb.RunContainerParams) (*pb.ContainerInfo, error) {
-	fmt.Printf("got a request to run a container: %v", runContainerParams)
+	log.Printf("got a request to run a container: %v", runContainerParams)
+	err := docker.RunContainer(runContainerParams.Image, runContainerParams.Cmd)
+	if err != nil {
+		log.Printf("failed to run container: %v", err)
+		return nil, err
+	}
 	return &pb.ContainerInfo{Id: ""}, nil
 }
 

@@ -2,6 +2,8 @@
 
 _Perun_ is a Peer-To-Peer Infrastructure-As-A-Service platform
 
+![](https://upload.wikimedia.org/wikipedia/commons/e/e4/Thunder_mark_%283%29.svg)
+
 Perun allows you to run code on other peoples machines or let other people run their code on your machine
 
 ## Architecture

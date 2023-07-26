@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "github.com/sithell/perun/manager/pb";
+
+package manager;
+
+service Manager {
+  rpc RegisterProvider(ProviderInfo) returns (RegisterProviderResponse) {}
+}
+
+message ProviderInfo {}
+
+message RegisterProviderResponse {
+  bool ok = 1;
+  string message = 2;
+}

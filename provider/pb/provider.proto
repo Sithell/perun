@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "github.com/sithell/perun/provider/pb";
+
+package provider;
+
+service Provider {
+  rpc RunContainer(RunContainerParams) returns (ContainerInfo) {}
+}
+
+message RunContainerParams {
+  string image = 1;
+  repeated string cmd = 2;
+}
+
+message ContainerInfo {
+  string id = 1;
+}

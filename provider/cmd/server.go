@@ -23,7 +23,7 @@ type server struct {
 	pb.UnimplementedProviderServer
 }
 
-func (s *server) RunContainer(ctx context.Context, runContainerParams *pb.RunContainerParams) (*pb.ContainerInfo, error) {
+func (s *server) RunContainer(_ context.Context, runContainerParams *pb.RunContainerParams) (*pb.ContainerInfo, error) {
 	fmt.Printf("got a request to run a container: %v", runContainerParams)
 	return &pb.ContainerInfo{Id: ""}, nil
 }
@@ -36,6 +36,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterProviderServer(grpcServer, &server{})
+	log.Printf("Provider gRPC API serving at %s", lis.Addr().String())
 	err = grpcServer.Serve(lis)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)

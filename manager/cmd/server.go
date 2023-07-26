@@ -39,6 +39,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterManagerServer(grpcServer, &server{})
+	log.Printf("Manager gRPC API serving at %s", lis.Addr().String())
 	err = grpcServer.Serve(lis)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)

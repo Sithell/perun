@@ -2,12 +2,22 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"github.com/sithell/perun/manager/pb"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 )
+
+var (
+	port int
+)
+
+func init() {
+	flag.IntVar(&port, "port", 9001, "port for grpc server to listen on")
+	flag.Parse()
+}
 
 type server struct {
 	pb.UnimplementedManagerServer
@@ -22,7 +32,7 @@ func (s *server) RegisterProvider(context.Context, *pb.ProviderInfo) (*pb.Regist
 }
 
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", 9000))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

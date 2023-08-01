@@ -4,7 +4,12 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
+	"github.com/sithell/perun/internal/database"
+	flag "github.com/spf13/pflag"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
@@ -13,8 +18,33 @@ import (
 	"github.com/sithell/perun/api/restapi/operations"
 )
 
-//go:generate swagger generate server --target ../../api --name API --spec ../swagger.yaml --principal interface{}
+var (
+	dbHost     string
+	dbUser     string
+	dbPassword string
+	dbPort     uint
+	dbName     string
+)
 
+func init() {
+	flag.StringVar(&dbHost, "db-host", "localhost", "database host")
+	flag.StringVar(&dbUser, "db-user", "perun", "database user")
+	flag.UintVar(&dbPort, "db-port", 5432, "database port")
+	flag.StringVar(&dbName, "db-name", "perun", "database name")
+	dbPassword = os.Getenv("DATABASE_PASSWORD")
+}
+
+var initAppFn = initApp
+
+func initApp() (*App, error) {
+	db, err := database.InitDB(dbHost, dbUser, dbPassword, dbName, dbPort)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init db: %w", err)
+	}
+	return &App{DB: db}, nil
+}
+
+//goland:noinspection GoUnusedParameter
 func configureFlags(api *operations.APIAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
 }
@@ -37,11 +67,15 @@ func configureAPI(api *operations.APIAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.CreateJobHandler == nil {
-		api.CreateJobHandler = operations.CreateJobHandlerFunc(func(params operations.CreateJobParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.CreateJob has not yet been implemented")
-		})
+	app, err := initAppFn()
+	if err != nil {
+		log.Fatalf("failed to init app: %v", app)
 	}
+
+	api.CreateJobHandler = operations.CreateJobHandlerFunc(func(params operations.CreateJobParams) middleware.Responder {
+		return &createJobResponder{params: params, app: app}
+	})
+
 	if api.GetJobByIDHandler == nil {
 		api.GetJobByIDHandler = operations.GetJobByIDHandlerFunc(func(params operations.GetJobByIDParams) middleware.Responder {
 			return middleware.NotImplemented("operation operations.GetJobByID has not yet been implemented")
@@ -66,6 +100,8 @@ func configureAPI(api *operations.APIAPI) http.Handler {
 }
 
 // The TLS configuration before HTTPS server starts.
+//
+//goland:noinspection GoUnusedParameter
 func configureTLS(tlsConfig *tls.Config) {
 	// Make all necessary changes to the TLS configuration here.
 }
@@ -74,6 +110,8 @@ func configureTLS(tlsConfig *tls.Config) {
 // If you need to modify a config, store server instance to stop it individually later, this is the place.
 // This function can be called multiple times, depending on the number of serving schemes.
 // scheme value will be set accordingly: "http", "https" or "unix".
+//
+//goland:noinspection GoUnusedParameter
 func configureServer(s *http.Server, scheme, addr string) {
 }
 

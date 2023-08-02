@@ -16,5 +16,28 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 
 ## TODO
 
-- [ ] Make a plan
+- [ ] Use OpenAPI 3.0 instead of Swagger 2.0
+- [ ] Make job id a string
+- [ ] Add Job and Run status constants
+- [ ] Make a provider-api (name in progress) with RegisterProvider method
+- [ ] Message broker for passing jobs to assigner?
+- [ ] Make assigner check for updates in db:jobs and assign their execution to providers
+- [ ] Add an UpdateRunStatus method to provider-api
+- [ ] Make provider push container status and stdout updates to provider-api
+- [ ] Come up with good names (client-api & provider-api & assigner?)
+- [ ] Ability to kill a job via client-api
+- [ ] Integration tests
+- [ ] Add docker-compose for all control-plane services
 
+## Possible features
+- re-run container if interrupted
+- get live stdout/stderr via websockets
+- ssh into containers
+- privacy for providers -> ip address hidden
+- shh proxy
+- exposed ports limited
+- proxy exposed ports
+- allow to mount drives (?)
+- providers rating
+- cli client
+- client libraries

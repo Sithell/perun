@@ -5,6 +5,7 @@ package restapi
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/sithell/perun/api/internal"
 	"github.com/sithell/perun/internal/database"
 	flag "github.com/spf13/pflag"
 	"log"
@@ -24,6 +25,10 @@ var (
 	dbPassword string
 	dbPort     uint
 	dbName     string
+	mqHost     string
+	mqUser     string
+	mqPassword string
+	mqPort     uint
 )
 
 func init() {
@@ -32,6 +37,10 @@ func init() {
 	flag.UintVar(&dbPort, "db-port", 5432, "database port")
 	flag.StringVar(&dbName, "db-name", "perun", "database name")
 	dbPassword = os.Getenv("DATABASE_PASSWORD")
+	flag.StringVar(&mqHost, "mq-host", "localhost", "message queue host")
+	flag.StringVar(&mqUser, "mq-user", "guest", "message queue user")
+	flag.UintVar(&mqPort, "mq-port", 5672, "message queue port")
+	mqPassword = os.Getenv("MESSAGE_QUEUE_PASSWORD")
 }
 
 var initAppFn = initApp
@@ -41,7 +50,8 @@ func initApp() (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
-	return &App{DB: db}, nil
+	mq, err := internal.InitMQ(mqUser, mqPassword, mqHost, mqPort)
+	return &App{DB: db, MQ: mq}, nil
 }
 
 //goland:noinspection GoUnusedParameter
@@ -92,7 +102,22 @@ func configureAPI(api *operations.APIAPI) http.Handler {
 
 	api.PreServerShutdown = func() {}
 
-	api.ServerShutdown = func() {}
+	api.ServerShutdown = func() {
+		err = app.MQ.Close()
+		if err != nil {
+			log.Printf("WARN: failed to close MQ connection: %v", err)
+		}
+
+		sqlDB, err := app.DB.DB()
+		if err != nil {
+			log.Printf("WARN: failed to get gorm sqlDB: %v", err)
+		} else {
+			err := sqlDB.Close()
+			if err != nil {
+				log.Printf("WARN: failed to close DB connection: %v", err)
+			}
+		}
+	}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
 }

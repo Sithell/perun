@@ -1,15 +1,18 @@
 package restapi
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sithell/perun/api/models"
 	"github.com/sithell/perun/api/restapi/operations"
 	"github.com/sithell/perun/internal/database"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"time"
 )
 
 func dbModelToApiModel(job database.Job, run *database.Run) *models.Job {
@@ -31,6 +34,46 @@ type createJobResponder struct {
 }
 
 func (rs createJobResponder) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+	ch, err := rs.app.MQ.Channel()
+	if err != nil {
+		log.Fatalf("failed to open channel: %v", err)
+	}
+	defer func(ch *amqp.Channel) {
+		err := ch.Close()
+		if err != nil {
+			log.Printf("failed to close channel: %v", err)
+		}
+	}(ch)
+
+	q, err := ch.QueueDeclare(
+		"run-container",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Fatalf("failed to declare a queue: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	body := "Hello World!"
+	err = ch.PublishWithContext(ctx,
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+	if err != nil {
+		log.Fatalf("failed to publish a message: %v", err)
+	}
+	log.Printf(" [x] Sent %s\n", body)
+
 	job := database.Job{Image: *rs.params.Job.Image, Command: rs.params.Job.Command}
 	result := rs.app.DB.Save(&job)
 	if result.Error != nil {

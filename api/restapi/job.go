@@ -12,6 +12,19 @@ import (
 	"net/http"
 )
 
+func dbModelToApiModel(job database.Job, run *database.Run) *models.Job {
+	result := models.Job{
+		Command: job.Command,
+		ID:      int64(job.ID),
+		Image:   &job.Image,
+		Status:  "created",
+	}
+	if run != nil {
+		result.Status = run.Status
+	}
+	return &result
+}
+
 type createJobResponder struct {
 	params operations.CreateJobParams
 	app    *App
@@ -24,12 +37,7 @@ func (rs createJobResponder) WriteResponse(rw http.ResponseWriter, producer runt
 		log.Fatalf("failed to save job into database: %v", result.Error)
 	}
 
-	operations.NewCreateJobOK().WithPayload(&models.Job{
-		ID:      int64(job.ID),
-		Image:   &job.Image,
-		Command: job.Command,
-		Status:  "created",
-	}).WriteResponse(rw, producer)
+	operations.NewCreateJobOK().WithPayload(dbModelToApiModel(job, nil)).WriteResponse(rw, producer)
 }
 
 type getJobByIDResponder struct {
@@ -49,11 +57,14 @@ func (rs getJobByIDResponder) WriteResponse(rw http.ResponseWriter, producer run
 		}
 		log.Fatalf("failed to find job with id=%d in database: %v", &rs.params.ID, result.Error)
 	}
-
-	operations.NewCreateJobOK().WithPayload(&models.Job{
-		ID:      int64(job.ID),
-		Image:   &job.Image,
-		Command: job.Command,
-		Status:  "created",
-	}).WriteResponse(rw, producer)
+	run := &database.Run{}
+	result = rs.app.DB.Where(database.Run{Job: job}).Order("created_at DESC").First(run)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			run = nil
+		} else {
+			log.Printf("WARN: failed to fetch runs for job #%d: %v", job.ID, result.Error)
+		}
+	}
+	operations.NewCreateJobOK().WithPayload(dbModelToApiModel(job, run)).WriteResponse(rw, producer)
 }

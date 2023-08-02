@@ -22,4 +22,5 @@ type Run struct {
 	ProviderID uint
 	Job        Job
 	Provider   Provider
+	Status     string
 }

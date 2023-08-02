@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime"
@@ -59,28 +60,29 @@ func (rs createJobResponder) WriteResponse(rw http.ResponseWriter, producer runt
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	body := "Hello World!"
-	err = ch.PublishWithContext(ctx,
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-	if err != nil {
-		log.Fatalf("failed to publish a message: %v", err)
-	}
-	log.Printf(" [x] Sent %s\n", body)
-
 	job := database.Job{Image: *rs.params.Job.Image, Command: rs.params.Job.Command}
 	result := rs.app.DB.Save(&job)
 	if result.Error != nil {
 		log.Fatalf("failed to save job into database: %v", result.Error)
 	}
 
-	operations.NewCreateJobOK().WithPayload(dbModelToApiModel(job, nil)).WriteResponse(rw, producer)
+	apiJob := dbModelToApiModel(job, nil)
+	body, err := json.Marshal(apiJob)
+	err = ch.PublishWithContext(ctx,
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		})
+	if err != nil {
+		log.Fatalf("failed to publish a message: %v", err)
+	}
+	log.Printf(" [x] Sent %s\n", string(body))
+
+	operations.NewCreateJobOK().WithPayload(apiJob).WriteResponse(rw, producer)
 }
 
 type getJobByIDResponder struct {

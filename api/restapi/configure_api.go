@@ -51,6 +51,9 @@ func initApp() (*App, error) {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 	mq, err := internal.InitMQ(mqUser, mqPassword, mqHost, mqPort)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init mq: %w", err)
+	}
 	return &App{DB: db, MQ: mq}, nil
 }
 

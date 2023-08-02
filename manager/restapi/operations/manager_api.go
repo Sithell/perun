@@ -48,7 +48,7 @@ func NewManagerAPI(spec *loads.Document) *ManagerAPI {
 	}
 }
 
-/*ManagerAPI Universal Perun API for clients and providers */
+/*ManagerAPI Perun API for providers */
 type ManagerAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context

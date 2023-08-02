@@ -4,7 +4,12 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
+	"github.com/sithell/perun/internal/database"
+	flag "github.com/spf13/pflag"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
@@ -12,6 +17,32 @@ import (
 
 	"github.com/sithell/perun/manager/restapi/operations"
 )
+
+var (
+	dbHost     string
+	dbUser     string
+	dbPassword string
+	dbPort     uint
+	dbName     string
+)
+
+func init() {
+	flag.StringVar(&dbHost, "db-host", "localhost", "database host")
+	flag.StringVar(&dbUser, "db-user", "perun", "database user")
+	flag.UintVar(&dbPort, "db-port", 5432, "database port")
+	flag.StringVar(&dbName, "db-name", "perun", "database name")
+	dbPassword = os.Getenv("DATABASE_PASSWORD")
+}
+
+var initAppFn = initApp
+
+func initApp() (*App, error) {
+	db, err := database.InitDB(dbHost, dbUser, dbPassword, dbName, dbPort)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init db: %w", err)
+	}
+	return &App{DB: db}, nil
+}
 
 //goland:noinspection GoUnusedParameter
 func configureFlags(api *operations.ManagerAPI) {
@@ -36,11 +67,14 @@ func configureAPI(api *operations.ManagerAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	if api.RegisterProviderHandler == nil {
-		api.RegisterProviderHandler = operations.RegisterProviderHandlerFunc(func(params operations.RegisterProviderParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.RegisterProvider has not yet been implemented")
-		})
+	app, err := initAppFn()
+	if err != nil {
+		log.Fatalf("failed to init app: %v", app)
 	}
+
+	api.RegisterProviderHandler = operations.RegisterProviderHandlerFunc(func(params operations.RegisterProviderParams) middleware.Responder {
+		return &registerProviderResponder{params: params, app: app}
+	})
 
 	api.PreServerShutdown = func() {}
 

@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   title: Perun API
-  description: Universal Perun API for clients and providers
+  description: Perun API for providers
   version: 1.0.0
 basePath: /v1
 schemes:
@@ -10,7 +10,7 @@ paths:
   /provider/register:
     post:
       summary: Register a new provider
-      description: Register a provider if it is reachable via gRPC at provided host and port
+      description: Registers a provider if it is reachable via gRPC at provided host and port
       operationId: RegisterProvider
       parameters:
         - in: body

@@ -2,7 +2,7 @@
 
 // Package restapi Perun API
 //
-//	Universal Perun API for clients and providers
+//	Perun API for providers
 //	Schemes:
 //	  http
 //	Host: localhost

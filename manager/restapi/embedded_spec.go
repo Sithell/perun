@@ -23,7 +23,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Universal Perun API for clients and providers",
+    "description": "Perun API for providers",
     "title": "Perun API",
     "version": "1.0.0"
   },
@@ -31,7 +31,7 @@ func init() {
   "paths": {
     "/provider/register": {
       "post": {
-        "description": "Register a provider if it is reachable via gRPC at provided host and port",
+        "description": "Registers a provider if it is reachable via gRPC at provided host and port",
         "summary": "Register a new provider",
         "operationId": "RegisterProvider",
         "parameters": [
@@ -80,7 +80,7 @@ func init() {
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Universal Perun API for clients and providers",
+    "description": "Perun API for providers",
     "title": "Perun API",
     "version": "1.0.0"
   },
@@ -88,7 +88,7 @@ func init() {
   "paths": {
     "/provider/register": {
       "post": {
-        "description": "Register a provider if it is reachable via gRPC at provided host and port",
+        "description": "Registers a provider if it is reachable via gRPC at provided host and port",
         "summary": "Register a new provider",
         "operationId": "RegisterProvider",
         "parameters": [

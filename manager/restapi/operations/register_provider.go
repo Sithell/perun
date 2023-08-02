@@ -34,7 +34,7 @@ func NewRegisterProvider(ctx *middleware.Context, handler RegisterProviderHandle
 
 # Register a new provider
 
-Register a provider if it is reachable via gRPC at provided host and port
+Registers a provider if it is reachable via gRPC at provided host and port
 */
 type RegisterProvider struct {
 	Context *middleware.Context

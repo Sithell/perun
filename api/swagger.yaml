@@ -65,6 +65,9 @@ paths:
           in: path
           type: integer
           required: true
+      produces:
+        - text/plain
+        - application/json
       responses:
         200:
           description: Successfully fetched job stdout

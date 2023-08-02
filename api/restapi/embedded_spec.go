@@ -102,6 +102,10 @@ func init() {
     "/jobs/{id}/stdout": {
       "get": {
         "description": "Returns stdout of a job as plain text",
+        "produces": [
+          "text/plain",
+          "application/json"
+        ],
         "summary": "Get stdout of a job",
         "operationId": "GetJobStdout",
         "parameters": [
@@ -256,6 +260,10 @@ func init() {
     "/jobs/{id}/stdout": {
       "get": {
         "description": "Returns stdout of a job as plain text",
+        "produces": [
+          "application/json",
+          "text/plain"
+        ],
         "summary": "Get stdout of a job",
         "operationId": "GetJobStdout",
         "parameters": [

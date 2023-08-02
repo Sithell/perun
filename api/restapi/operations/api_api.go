@@ -41,6 +41,7 @@ func NewAPIAPI(spec *loads.Document) *APIAPI {
 		JSONConsumer: runtime.JSONConsumer(),
 
 		JSONProducer: runtime.JSONProducer(),
+		TxtProducer:  runtime.TextProducer(),
 
 		CreateJobHandler: CreateJobHandlerFunc(func(params CreateJobParams) middleware.Responder {
 			return middleware.NotImplemented("operation CreateJob has not yet been implemented")
@@ -89,6 +90,9 @@ type APIAPI struct {
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
 	JSONProducer runtime.Producer
+	// TxtProducer registers a producer for the following mime types:
+	//   - text/plain
+	TxtProducer runtime.Producer
 
 	// CreateJobHandler sets the operation handler for the create job operation
 	CreateJobHandler CreateJobHandler
@@ -174,6 +178,9 @@ func (o *APIAPI) Validate() error {
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
 	}
+	if o.TxtProducer == nil {
+		unregistered = append(unregistered, "TxtProducer")
+	}
 
 	if o.CreateJobHandler == nil {
 		unregistered = append(unregistered, "CreateJobHandler")
@@ -235,6 +242,8 @@ func (o *APIAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer {
 		switch mt {
 		case "application/json":
 			result["application/json"] = o.JSONProducer
+		case "text/plain":
+			result["text/plain"] = o.TxtProducer
 		}
 
 		if p, ok := o.customProducers[mt]; ok {

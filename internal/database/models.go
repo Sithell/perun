@@ -23,4 +23,5 @@ type Run struct {
 	Job        Job
 	Provider   Provider
 	Status     string
+	Stdout     string
 }

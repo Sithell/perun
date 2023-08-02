@@ -68,3 +68,30 @@ func (rs getJobByIDResponder) WriteResponse(rw http.ResponseWriter, producer run
 	}
 	operations.NewCreateJobOK().WithPayload(dbModelToApiModel(job, run)).WriteResponse(rw, producer)
 }
+
+type getJobStdoutResponder struct {
+	params operations.GetJobStdoutParams
+	app    *App
+}
+
+func (rs getJobStdoutResponder) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+	job := database.Job{}
+	result := rs.app.DB.First(&job, rs.params.ID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			operations.NewGetJobByIDNotFound().WithPayload(&models.Error{
+				Message: fmt.Sprintf("No job with id=%d", rs.params.ID),
+			}).WriteResponse(rw, producer)
+			return
+		}
+		log.Fatalf("failed to find job with id=%d in database: %v", &rs.params.ID, result.Error)
+	}
+	run := &database.Run{}
+	result = rs.app.DB.Where(database.Run{Job: job}).Order("created_at DESC").First(run)
+	if result.Error != nil {
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Printf("WARN: failed to fetch runs for job #%d: %v", job.ID, result.Error)
+		}
+	}
+	operations.NewGetJobStdoutOK().WithPayload(run.Stdout).WriteResponse(rw, producer)
+}

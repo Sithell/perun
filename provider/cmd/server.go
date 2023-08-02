@@ -34,6 +34,10 @@ func (s *server) RunContainer(_ context.Context, runContainerParams *pb.RunConta
 	return &pb.ContainerInfo{Id: ""}, nil
 }
 
+func (s *server) Ping(context.Context, *pb.PingRequest) (*pb.PingResponse, error) {
+	return &pb.PingResponse{}, nil
+}
+
 func main() {
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {

@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Provider_Ping_FullMethodName         = "/provider.Provider/Ping"
 	Provider_RunContainer_FullMethodName = "/provider.Provider/RunContainer"
 )
 
@@ -26,6 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	RunContainer(ctx context.Context, in *RunContainerParams, opts ...grpc.CallOption) (*ContainerInfo, error)
 }
 
@@ -35,6 +37,15 @@ type providerClient struct {
 
 func NewProviderClient(cc grpc.ClientConnInterface) ProviderClient {
 	return &providerClient{cc}
+}
+
+func (c *providerClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, Provider_Ping_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *providerClient) RunContainer(ctx context.Context, in *RunContainerParams, opts ...grpc.CallOption) (*ContainerInfo, error) {
@@ -50,6 +61,7 @@ func (c *providerClient) RunContainer(ctx context.Context, in *RunContainerParam
 // All implementations must embed UnimplementedProviderServer
 // for forward compatibility
 type ProviderServer interface {
+	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	RunContainer(context.Context, *RunContainerParams) (*ContainerInfo, error)
 	mustEmbedUnimplementedProviderServer()
 }
@@ -58,6 +70,9 @@ type ProviderServer interface {
 type UnimplementedProviderServer struct {
 }
 
+func (UnimplementedProviderServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
 func (UnimplementedProviderServer) RunContainer(context.Context, *RunContainerParams) (*ContainerInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunContainer not implemented")
 }
@@ -72,6 +87,24 @@ type UnsafeProviderServer interface {
 
 func RegisterProviderServer(s grpc.ServiceRegistrar, srv ProviderServer) {
 	s.RegisterService(&Provider_ServiceDesc, srv)
+}
+
+func _Provider_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Provider_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Provider_RunContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -99,6 +132,10 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "provider.Provider",
 	HandlerType: (*ProviderServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _Provider_Ping_Handler,
+		},
 		{
 			MethodName: "RunContainer",
 			Handler:    _Provider_RunContainer_Handler,

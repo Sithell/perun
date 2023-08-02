@@ -18,7 +18,7 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 
 ### TODO
 
-- [ ] Make a provider-api (name in progress) with RegisterProvider method
+- [x] Make a provider-api (name in progress) with RegisterProvider method
 - [ ] Message broker for passing jobs to assigner?
 - [ ] Make assigner check for updates in db:jobs and assign their execution to providers
 - [ ] Add an UpdateRunStatus method to provider-api
@@ -30,6 +30,7 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - [ ] Add Job and Run status constants
 - [ ] Make job id a string
 - [ ] Use OpenAPI 3.0 instead of Swagger 2.0
+- [ ] Handle provider host aliases (domain.com, 123.122.33.22, etc.)
 
 ### Features possible in the future
 - re-run container if interrupted

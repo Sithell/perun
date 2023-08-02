@@ -14,11 +14,10 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - Manager assigns execution of client code to one of the Providers
 - Providers run code assigned by Manager and return back the results
 
-## TODO
+## Roadmap
 
-- [ ] Use OpenAPI 3.0 instead of Swagger 2.0
-- [ ] Make job id a string
-- [ ] Add Job and Run status constants
+### TODO
+
 - [ ] Make a provider-api (name in progress) with RegisterProvider method
 - [ ] Message broker for passing jobs to assigner?
 - [ ] Make assigner check for updates in db:jobs and assign their execution to providers
@@ -28,8 +27,11 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - [ ] Ability to kill a job via client-api
 - [ ] Integration tests
 - [ ] Add docker-compose for all control-plane services
+- [ ] Add Job and Run status constants
+- [ ] Make job id a string
+- [ ] Use OpenAPI 3.0 instead of Swagger 2.0
 
-## Possible features
+### Features possible in the future
 - re-run container if interrupted
 - get live stdout/stderr via websockets
 - ssh into containers
@@ -41,3 +43,12 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - providers rating
 - cli client
 - client libraries
+
+## How to contribute
+
+### Code generation
+
+```shell
+go generate ./...
+```
+

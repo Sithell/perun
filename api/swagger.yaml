@@ -15,6 +15,7 @@ paths:
       parameters:
         - name: job
           in: body
+          required: true
           schema:
             $ref: '#/definitions/Job'
       responses:

@@ -6,6 +6,7 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
@@ -34,6 +35,7 @@ type CreateJobParams struct {
 	HTTPRequest *http.Request `json:"-"`
 
 	/*
+	  Required: true
 	  In: body
 	*/
 	Job *models.Job
@@ -52,7 +54,11 @@ func (o *CreateJobParams) BindRequest(r *http.Request, route *middleware.Matched
 		defer r.Body.Close()
 		var body models.Job
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			res = append(res, errors.NewParseError("job", "body", "", err))
+			if err == io.EOF {
+				res = append(res, errors.Required("job", "body", ""))
+			} else {
+				res = append(res, errors.NewParseError("job", "body", "", err))
+			}
 		} else {
 			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
@@ -68,6 +74,8 @@ func (o *CreateJobParams) BindRequest(r *http.Request, route *middleware.Matched
 				o.Job = &body
 			}
 		}
+	} else {
+		res = append(res, errors.Required("job", "body", ""))
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

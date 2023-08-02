@@ -54,6 +54,7 @@ func init() {
           {
             "name": "job",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/Job"
             }
@@ -186,6 +187,7 @@ func init() {
           {
             "name": "job",
             "in": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/Job"
             }

@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime"
+
+	"github.com/sithell/perun/api/models"
 )
 
 // GetJobStdoutOKCode is the HTTP code returned for type GetJobStdoutOK
@@ -51,5 +53,50 @@ func (o *GetJobStdoutOK) WriteResponse(rw http.ResponseWriter, producer runtime.
 	payload := o.Payload
 	if err := producer.Produce(rw, payload); err != nil {
 		panic(err) // let the recovery middleware deal with this
+	}
+}
+
+// GetJobStdoutNotFoundCode is the HTTP code returned for type GetJobStdoutNotFound
+const GetJobStdoutNotFoundCode int = 404
+
+/*
+GetJobStdoutNotFound Job not found
+
+swagger:response getJobStdoutNotFound
+*/
+type GetJobStdoutNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewGetJobStdoutNotFound creates GetJobStdoutNotFound with default headers values
+func NewGetJobStdoutNotFound() *GetJobStdoutNotFound {
+
+	return &GetJobStdoutNotFound{}
+}
+
+// WithPayload adds the payload to the get job stdout not found response
+func (o *GetJobStdoutNotFound) WithPayload(payload *models.Error) *GetJobStdoutNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get job stdout not found response
+func (o *GetJobStdoutNotFound) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetJobStdoutNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
 }

@@ -76,11 +76,10 @@ func configureAPI(api *operations.APIAPI) http.Handler {
 		return &createJobResponder{params: params, app: app}
 	})
 
-	if api.GetJobByIDHandler == nil {
-		api.GetJobByIDHandler = operations.GetJobByIDHandlerFunc(func(params operations.GetJobByIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.GetJobByID has not yet been implemented")
-		})
-	}
+	api.GetJobByIDHandler = operations.GetJobByIDHandlerFunc(func(params operations.GetJobByIDParams) middleware.Responder {
+		return &getJobByIDResponder{params: params, app: app}
+	})
+
 	if api.GetJobStdoutHandler == nil {
 		api.GetJobStdoutHandler = operations.GetJobStdoutHandlerFunc(func(params operations.GetJobStdoutParams) middleware.Responder {
 			return middleware.NotImplemented("operation operations.GetJobStdout has not yet been implemented")

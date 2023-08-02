@@ -89,6 +89,12 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Job"
             }
+          },
+          "404": {
+            "description": "Job not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -112,12 +118,27 @@ func init() {
             "schema": {
               "type": "string"
             }
+          },
+          "404": {
+            "description": "Job not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
     }
   },
   "definitions": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "Detailed error message",
+          "type": "string"
+        }
+      }
+    },
     "Job": {
       "type": "object",
       "required": [
@@ -222,6 +243,12 @@ func init() {
             "schema": {
               "$ref": "#/definitions/Job"
             }
+          },
+          "404": {
+            "description": "Job not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -245,12 +272,27 @@ func init() {
             "schema": {
               "type": "string"
             }
+          },
+          "404": {
+            "description": "Job not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
     }
   },
   "definitions": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "Detailed error message",
+          "type": "string"
+        }
+      }
+    },
     "Job": {
       "type": "object",
       "required": [

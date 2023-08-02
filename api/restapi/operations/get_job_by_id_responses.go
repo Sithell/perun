@@ -57,3 +57,48 @@ func (o *GetJobByIDOK) WriteResponse(rw http.ResponseWriter, producer runtime.Pr
 		}
 	}
 }
+
+// GetJobByIDNotFoundCode is the HTTP code returned for type GetJobByIDNotFound
+const GetJobByIDNotFoundCode int = 404
+
+/*
+GetJobByIDNotFound Job not found
+
+swagger:response getJobByIdNotFound
+*/
+type GetJobByIDNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewGetJobByIDNotFound creates GetJobByIDNotFound with default headers values
+func NewGetJobByIDNotFound() *GetJobByIDNotFound {
+
+	return &GetJobByIDNotFound{}
+}
+
+// WithPayload adds the payload to the get job by Id not found response
+func (o *GetJobByIDNotFound) WithPayload(payload *models.Error) *GetJobByIDNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get job by Id not found response
+func (o *GetJobByIDNotFound) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetJobByIDNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}

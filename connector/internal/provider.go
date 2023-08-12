@@ -3,7 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/sithell/perun/manager/pb"
+	"github.com/sithell/perun/connector/pb"
 	"log"
 	"math/rand"
 	"strconv"

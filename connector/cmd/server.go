@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/sithell/perun/manager/internal"
-	"github.com/sithell/perun/manager/pb"
+	"github.com/sithell/perun/connector/internal"
+	"github.com/sithell/perun/connector/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 	"io"
@@ -78,7 +78,7 @@ func (s *apiServer) Ping(context.Context, *pb.Empty) (*pb.PingResponse, error) {
 	return &pb.PingResponse{}, nil
 }
 
-func (s *apiServer) RunContainer(ctx context.Context, params *pb.RunContainerParams) (*pb.ContainerInfo, error) {
+func (s *apiServer) RunContainer(_ context.Context, params *pb.RunContainerParams) (*pb.ContainerInfo, error) {
 	var provider *internal.Provider
 	for _, v := range internal.GetProviders() {
 		provider = v

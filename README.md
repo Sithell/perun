@@ -21,7 +21,7 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - [x] Make a provider-api (name in progress) with RegisterProvider method
 - [x] Message broker for passing jobs to assigner?
 - [x] Make assigner check for updates in db:jobs and assign their execution to providers
-- [ ] Connector: register providers in DB on connect
+- [x] Connector: register providers in DB on connect
 - [ ] Connector: method to return active connections
 - [ ] Connector: provider parameter on every Api request
 - [ ] Assigner: call Connector methods

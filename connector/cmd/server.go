@@ -6,24 +6,39 @@ import (
 	"fmt"
 	"github.com/sithell/perun/connector/internal"
 	"github.com/sithell/perun/connector/pb"
+	"github.com/sithell/perun/internal/database"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
+	"gorm.io/gorm"
 	"io"
 	"log"
 	"net"
+	"os"
+	"strconv"
 )
 
 var (
-	port int
+	dbHost     string
+	dbUser     string
+	dbPassword string
+	dbPort     uint
+	dbName     string
+	port       int
 )
 
 func init() {
+	flag.StringVar(&dbHost, "db-host", "localhost", "database host")
+	flag.StringVar(&dbUser, "db-user", "perun", "database user")
+	flag.UintVar(&dbPort, "db-port", 5432, "database port")
+	flag.StringVar(&dbName, "db-name", "perun", "database name")
+	dbPassword = os.Getenv("DATABASE_PASSWORD")
 	flag.IntVar(&port, "port", 9002, "port for grpc server to listen on")
 	flag.Parse()
 }
 
 type providerServer struct {
 	pb.UnimplementedProviderServer
+	db *gorm.DB
 }
 
 func (s *providerServer) InitConnection(srv pb.Provider_InitConnectionServer) error {
@@ -36,9 +51,13 @@ func (s *providerServer) InitConnection(srv pb.Provider_InitConnectionServer) er
 		Send:    send,
 		Receive: receive,
 	}
-	providerId := p.Addr.String()
-	internal.AddProvider(providerId, provider)
-	log.Printf("Opened connection with provider %s", providerId)
+	providerModel := &database.Provider{
+		Host:   p.Addr.String(),
+		Status: "active",
+	}
+	s.db.Create(providerModel)
+	internal.AddProvider(strconv.Itoa(int(providerModel.ID)), provider)
+	log.Printf("Opened connection with provider id=%d", providerModel.ID)
 
 	ctx, cancel := context.WithCancel(ctx)
 	go func(ctx context.Context, cancel context.CancelFunc) {
@@ -54,7 +73,7 @@ func (s *providerServer) InitConnection(srv pb.Provider_InitConnectionServer) er
 		for {
 			req, err := srv.Recv()
 			if err == io.EOF {
-				log.Printf("Closed connection with provider %s", providerId)
+				log.Printf("Closed connection with provider id=%d", providerModel.ID)
 				cancel()
 				return
 			}
@@ -66,7 +85,9 @@ func (s *providerServer) InitConnection(srv pb.Provider_InitConnectionServer) er
 		}
 	}(ctx, cancel)
 	<-ctx.Done()
-	internal.DeleteProvider(providerId)
+	providerModel.Status = "disconnected"
+	s.db.Save(providerModel)
+	internal.DeleteProvider(strconv.Itoa(int(providerModel.ID)))
 	return ctx.Err()
 }
 
@@ -95,13 +116,18 @@ func (s *apiServer) RunContainer(_ context.Context, params *pb.RunContainerParam
 }
 
 func main() {
+	db, err := database.InitDB(dbHost, dbUser, dbPassword, dbName, dbPort)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterProviderServer(grpcServer, &providerServer{})
+	pb.RegisterProviderServer(grpcServer, &providerServer{db: db})
 	pb.RegisterApiServer(grpcServer, &apiServer{})
 	log.Printf("Provider gRPC API serving at %s", lis.Addr().String())
 

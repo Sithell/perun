@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "github.com/sithell/perun/connector/pb";
 
-package provider;
+package connector;
 
 service Provider { // for providers
   rpc Ping(Empty) returns (PingResponse) {}
@@ -35,12 +35,14 @@ message RunContainerResponse {
 
 service Api { // for clients
   rpc Ping(Empty) returns (PingResponse) {}
+  rpc GetActiveConnections(Empty) returns (ProviderConnections) {}
   rpc RunContainer(RunContainerParams) returns (ContainerInfo) {}
 }
 
 message RunContainerParams {
   string image = 1;
   string cmd = 2;
+  uint64 provider_id = 3;
 }
 
 message ContainerInfo {
@@ -49,3 +51,10 @@ message ContainerInfo {
 
 message Empty {}
 message PingResponse {}
+
+message ProviderConnections {
+  repeated ProviderConnection connections = 1;
+}
+message ProviderConnection {
+  uint64 provider_id = 1;
+}

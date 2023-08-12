@@ -15,5 +15,6 @@ Check `pb/connector.proto` for up-to-date spec
 ## TODO
 
 - [x] register providers in DB on connect
-- [ ] method to return active connections
-- [ ] provider parameter on every Api request
+- [x] method to return active connections
+- [x] provider parameter on every Api request
+- [ ] How to identify a provider after reconnect (by host? generated id?)

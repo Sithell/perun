@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Provider_Ping_FullMethodName           = "/provider.Provider/Ping"
-	Provider_InitConnection_FullMethodName = "/provider.Provider/InitConnection"
+	Provider_Ping_FullMethodName           = "/connector.Provider/Ping"
+	Provider_InitConnection_FullMethodName = "/connector.Provider/InitConnection"
 )
 
 // ProviderClient is the client API for Provider service.
@@ -159,7 +159,7 @@ func (x *providerInitConnectionServer) Recv() (*ClientResponse, error) {
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Provider_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "provider.Provider",
+	ServiceName: "connector.Provider",
 	HandlerType: (*ProviderServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -179,8 +179,9 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	Api_Ping_FullMethodName         = "/provider.Api/Ping"
-	Api_RunContainer_FullMethodName = "/provider.Api/RunContainer"
+	Api_Ping_FullMethodName                 = "/connector.Api/Ping"
+	Api_GetActiveConnections_FullMethodName = "/connector.Api/GetActiveConnections"
+	Api_RunContainer_FullMethodName         = "/connector.Api/RunContainer"
 )
 
 // ApiClient is the client API for Api service.
@@ -188,6 +189,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ApiClient interface {
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PingResponse, error)
+	GetActiveConnections(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ProviderConnections, error)
 	RunContainer(ctx context.Context, in *RunContainerParams, opts ...grpc.CallOption) (*ContainerInfo, error)
 }
 
@@ -208,6 +210,15 @@ func (c *apiClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption
 	return out, nil
 }
 
+func (c *apiClient) GetActiveConnections(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ProviderConnections, error) {
+	out := new(ProviderConnections)
+	err := c.cc.Invoke(ctx, Api_GetActiveConnections_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *apiClient) RunContainer(ctx context.Context, in *RunContainerParams, opts ...grpc.CallOption) (*ContainerInfo, error) {
 	out := new(ContainerInfo)
 	err := c.cc.Invoke(ctx, Api_RunContainer_FullMethodName, in, out, opts...)
@@ -222,6 +233,7 @@ func (c *apiClient) RunContainer(ctx context.Context, in *RunContainerParams, op
 // for forward compatibility
 type ApiServer interface {
 	Ping(context.Context, *Empty) (*PingResponse, error)
+	GetActiveConnections(context.Context, *Empty) (*ProviderConnections, error)
 	RunContainer(context.Context, *RunContainerParams) (*ContainerInfo, error)
 	mustEmbedUnimplementedApiServer()
 }
@@ -232,6 +244,9 @@ type UnimplementedApiServer struct {
 
 func (UnimplementedApiServer) Ping(context.Context, *Empty) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedApiServer) GetActiveConnections(context.Context, *Empty) (*ProviderConnections, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetActiveConnections not implemented")
 }
 func (UnimplementedApiServer) RunContainer(context.Context, *RunContainerParams) (*ContainerInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunContainer not implemented")
@@ -267,6 +282,24 @@ func _Api_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Api_GetActiveConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApiServer).GetActiveConnections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Api_GetActiveConnections_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApiServer).GetActiveConnections(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Api_RunContainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RunContainerParams)
 	if err := dec(in); err != nil {
@@ -289,12 +322,16 @@ func _Api_RunContainer_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Api_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "provider.Api",
+	ServiceName: "connector.Api",
 	HandlerType: (*ApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _Api_Ping_Handler,
+		},
+		{
+			MethodName: "GetActiveConnections",
+			Handler:    _Api_GetActiveConnections_Handler,
 		},
 		{
 			MethodName: "RunContainer",

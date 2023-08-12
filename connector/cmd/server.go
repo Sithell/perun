@@ -100,19 +100,28 @@ func (s *apiServer) Ping(context.Context, *pb.Empty) (*pb.PingResponse, error) {
 }
 
 func (s *apiServer) RunContainer(_ context.Context, params *pb.RunContainerParams) (*pb.ContainerInfo, error) {
-	var provider *internal.Provider
-	for _, v := range internal.GetProviders() {
-		provider = v
-		break
-	}
-	if provider == nil {
-		return nil, fmt.Errorf("no providers available at the moment")
+	provider, ok := internal.GetProviders()[strconv.FormatUint(params.ProviderId, 10)]
+	if !ok {
+		return nil, fmt.Errorf("no connection with provider_id=%d", params.ProviderId)
 	}
 	response, err := provider.RunContainer(&pb.RunContainerRequest{Image: params.Image, Cmd: params.Cmd})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.ContainerInfo{Id: response.Id}, nil
+}
+
+func (s *apiServer) GetActiveConnections(context.Context, *pb.Empty) (*pb.ProviderConnections, error) {
+	var result []*pb.ProviderConnection
+	for id := range internal.GetProviders() {
+		intId, err := strconv.Atoi(id)
+		if err != nil {
+			log.Printf("failed to convert string id to int: %v", err)
+			continue
+		}
+		result = append(result, &pb.ProviderConnection{ProviderId: uint64(intId)})
+	}
+	return &pb.ProviderConnections{Connections: result}, nil
 }
 
 func main() {

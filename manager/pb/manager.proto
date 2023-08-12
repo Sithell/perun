@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option go_package = "github.com/sithell/perun/manager/pb";
+
+package provider;
+
+service Provider { // for providers
+  rpc Ping(Empty) returns (PingResponse) {}
+  rpc InitConnection(stream ClientResponse) returns (stream ServerRequest) {}
+}
+
+message ServerRequest {
+  string id = 1;
+  oneof body {
+    RunContainerRequest run_container = 3;
+  }
+}
+
+message ClientResponse {
+  string response_to = 1;
+  oneof body {
+    RunContainerResponse run_container = 3;
+  }
+}
+
+message RunContainerRequest {
+  string image = 1;
+  string cmd = 2;
+}
+
+message RunContainerResponse {
+  string id = 1;
+}
+
+
+service Api { // for clients
+  rpc Ping(Empty) returns (PingResponse) {}
+  rpc RunContainer(RunContainerParams) returns (ContainerInfo) {}
+}
+
+message RunContainerParams {
+  string image = 1;
+  string cmd = 2;
+}
+
+message ContainerInfo {
+  string id = 1;
+}
+
+message Empty {}
+message PingResponse {}

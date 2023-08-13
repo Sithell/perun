@@ -17,4 +17,5 @@ Check `pb/connector.proto` for up-to-date spec
 - [x] register providers in DB on connect
 - [x] method to return active connections
 - [x] provider parameter on every Api request
+- [ ] refactor: wait for channels via for expression
 - [ ] How to identify a provider after reconnect (by host? generated id?)

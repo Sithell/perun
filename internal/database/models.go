@@ -18,10 +18,11 @@ type Provider struct {
 
 type Run struct {
 	gorm.Model
-	JobID      uint
-	ProviderID uint
-	Job        Job
-	Provider   Provider
-	Status     string
-	Stdout     string
+	JobID       uint
+	ProviderID  uint
+	Job         Job
+	Provider    Provider
+	Status      string
+	ContainerID string
+	Stdout      string
 }

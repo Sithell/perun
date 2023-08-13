@@ -6,27 +6,29 @@ import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sithell/perun/api/models"
+	connector "github.com/sithell/perun/connector/pb"
 	"github.com/sithell/perun/internal/database"
-	"github.com/sithell/perun/provider/pb"
 	flag "github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"gorm.io/gorm"
 	"log"
 	"os"
-	"strings"
 	"time"
 )
 
 var (
-	dbHost     string
-	dbUser     string
-	dbPassword string
-	dbPort     uint
-	dbName     string
-	mqHost     string
-	mqUser     string
-	mqPassword string
-	mqPort     uint
+	dbHost        string
+	dbUser        string
+	dbPassword    string
+	dbPort        uint
+	dbName        string
+	mqHost        string
+	mqUser        string
+	mqPassword    string
+	mqPort        uint
+	connectorHost string
+	connectorPort uint
 )
 
 func init() {
@@ -39,11 +41,37 @@ func init() {
 	flag.StringVar(&mqUser, "mq-user", "guest", "message queue user")
 	flag.UintVar(&mqPort, "mq-port", 5672, "message queue port")
 	mqPassword = os.Getenv("MESSAGE_QUEUE_PASSWORD")
+	flag.StringVar(&connectorHost, "connector-host", "localhost", "connector host")
+	flag.UintVar(&connectorPort, "connector-port", 9002, "connector port")
 }
 
-type Provider struct {
-	Provider database.Provider
-	Client   pb.ProviderClient
+func availableProviders(ctx context.Context, db *gorm.DB) ([]database.Provider, error) {
+	var providers []database.Provider
+	q := db.Find(&providers)
+	if q.Error != nil {
+		return nil, fmt.Errorf("failed to fetch providers from db: %w", q.Error)
+	}
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", connectorHost, connectorPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("WARN: failed to connect to connector: %w", err)
+	}
+	client := connector.NewApiClient(conn)
+	connections, err := client.GetActiveConnections(ctx, &connector.Empty{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch active connections from connector: %w", err)
+	}
+
+	var result []database.Provider
+	// O(n^2)
+	for _, provider := range providers {
+		for _, connection := range connections.Connections {
+			if uint64(provider.ID) == connection.ProviderId {
+				result = append(result, provider)
+			}
+		}
+	}
+	return result, nil
 }
 
 func main() {
@@ -51,26 +79,6 @@ func main() {
 	db, err := database.InitDB(dbHost, dbUser, dbPassword, dbName, dbPort)
 	if err != nil {
 		log.Fatalf("failed to init db: %v", err)
-	}
-
-	var providers []database.Provider
-	result := db.Find(&providers)
-	if result.Error != nil {
-		log.Fatalf("failed to fetch providers from db: %v", result.Error)
-	}
-	var providerClients []Provider
-	for _, provider := range providers {
-		conn, err := grpc.Dial(provider.Host, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Printf("WARN: failed to connect to provider #%d: %v", provider.ID, err)
-		}
-		providerClients = append(providerClients, Provider{
-			Provider: provider,
-			Client:   pb.NewProviderClient(conn),
-		})
-	}
-	if len(providerClients) == 0 {
-		log.Fatalf("No providers to assign jobs to!")
 	}
 
 	mq, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%d/", mqUser, mqPassword, mqHost, mqPort))
@@ -128,32 +136,58 @@ func main() {
 			}
 			fmt.Printf("Job(id=%d, image=%s, command=%s)\n", job.ID, job.Image, job.Command)
 			var runs []database.Run
-			result = db.Where("runs.job_id = ?", job.ID).Find(&runs)
+			result := db.Where("runs.job_id = ?", job.ID).Find(&runs)
 			if result.Error != nil {
 				log.Printf("WARN: failed to fetch runs from db: %v", result.Error)
 				continue
 			}
 			if len(runs) == 0 {
 				// job was never run before
-				assignedProvider := providerClients[time.Now().Nanosecond()%len(providerClients)]
+				var providers []database.Provider
+				providers, err = availableProviders(ctx, db)
+				if err != nil {
+					log.Printf("ERROR: failed to get avaiable providers: %v", err)
+					continue
+				}
+
+				assignedProvider := providers[time.Now().Nanosecond()%len(providers)]
+
 				run := database.Run{
 					JobID:    uint(job.ID),
-					Provider: assignedProvider.Provider,
-					Status:   "started",
+					Provider: assignedProvider,
+					Status:   "assigned",
 				}
-				result := db.Save(&run)
+				result = db.Save(&run)
 				if result.Error != nil {
 					log.Printf("WARN: failed to save run in db: %v", result.Error)
 					continue
 				}
-				containerInfo, err := assignedProvider.Client.RunContainer(ctx, &pb.RunContainerParams{
-					Image: *job.Image,
-					Cmd:   strings.Split(job.Command, " "),
+
+				conn, err := grpc.Dial(fmt.Sprintf("%s:%d", connectorHost, connectorPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					fmt.Printf("WARN: failed to connect to connector: %v", err)
+					continue
+				}
+				client := connector.NewApiClient(conn)
+
+				containerInfo, err := client.RunContainer(ctx, &connector.RunContainerParams{
+					Image:      *job.Image,
+					Cmd:        job.Command,
+					ProviderId: uint64(assignedProvider.ID),
 				})
 				if err != nil {
 					log.Printf("WARN: failed to run container: %v", err)
 					continue
 				}
+
+				run.Status = "started"
+				run.ContainerID = containerInfo.Id
+				result = db.Save(&run)
+				if result.Error != nil {
+					log.Printf("WARN: failed to update run status: %v", result.Error)
+					continue
+				}
+
 				fmt.Printf("Started container id=%s", containerInfo.Id)
 			}
 		}

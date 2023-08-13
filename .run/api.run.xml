@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="api" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="perun" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="--port 8008" />
+    <envs>
+      <env name="DATABASE_PASSWORD" value="password" />
+      <env name="MESSAGE_QUEUE_PASSWORD" value="guest" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="github.com/sithell/perun/api/cmd/api-server" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/api/cmd/api-server/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

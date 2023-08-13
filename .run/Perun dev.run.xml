@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Perun dev" type="CompoundRunConfigurationType">
+    <toRun name="api" type="GoApplicationRunConfiguration" />
+    <toRun name="assigner" type="GoApplicationRunConfiguration" />
+    <toRun name="connector" type="GoApplicationRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

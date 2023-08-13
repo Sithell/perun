@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="assigner" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="perun" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="DATABASE_PASSWORD" value="password" />
+      <env name="MESSAGE_QUEUE_PASSWORD" value="guest" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="github.com/sithell/perun/assigner/cmd" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/assigner/cmd/assign.go" />
+    <method v="2" />
+  </configuration>
+</component>

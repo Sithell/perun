@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="connector" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="perun" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="DATABASE_PASSWORD" value="password" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="github.com/sithell/perun/connector/cmd" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/connector/cmd/server.go" />
+    <method v="2" />
+  </configuration>
+</component>

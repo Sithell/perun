@@ -25,7 +25,7 @@ Perun consists of 3 main components: _Client_, _Manager_ and _Provider_
 - [x] Connector: method to return active connections
 - [x] Connector: provider parameter on every Api request
 - [x] Assigner: call Connector methods
-- [ ] Provider: Call Connector InitConnection on start and listen for commands
+- [x] Provider: Call Connector InitConnection on start and listen for commands
 - [ ] Add an UpdateRunStatus method to provider-api
 - [ ] Make provider push container status and stdout updates to provider-api
 - [ ] Ability to kill a job via client-api

@@ -10,23 +10,24 @@ import (
 	"os"
 )
 
-func RunContainer(image string, command []string) error {
+// RunContainer runs a docker container and returns its id
+func RunContainer(image string, command []string) (string, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer cli.Close()
 
 	reader, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer reader.Close()
 	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -35,7 +36,7 @@ func RunContainer(image string, command []string) error {
 		Tty:   false,
 	}, nil, nil, nil, "")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
@@ -46,19 +47,19 @@ func RunContainer(image string, command []string) error {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			return err
+			return "", err
 		}
 	case <-statusCh:
 	}
 
 	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return resp.ID, nil
 }

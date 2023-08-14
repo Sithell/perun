@@ -19,3 +19,4 @@ Check `pb/connector.proto` for up-to-date spec
 - [x] provider parameter on every Api request
 - [ ] refactor: wait for channels via for expression
 - [ ] How to identify a provider after reconnect (by host? generated id?)
+- [ ] How to track provider status if connector crashes?
